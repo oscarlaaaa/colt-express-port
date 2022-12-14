@@ -8,7 +8,11 @@ const port = process.env.PORT;
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  }
+});
 
 
 app.get('/', (req: any, res: any) => {
@@ -16,9 +20,10 @@ app.get('/', (req: any, res: any) => {
 });
 
 io.on('connection', (socket: any) => {
+  io.emit('connection');
   console.log('a user connected');
-  socket.on('chat message', (msg: any) => {
-    io.emit('chat message', msg);
+  socket.on('ping', (msg: any) => {
+    io.emit('pong', msg);
   });
   socket.on('disconnect', () => {
     console.log('user disconnected');
