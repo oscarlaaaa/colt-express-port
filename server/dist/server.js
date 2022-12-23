@@ -1,30 +1,31 @@
 "use strict";
-const express = require('express');
-const dotenv = require('dotenv');
-dotenv.config();
-const app = express();
-const port = process.env.PORT;
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, {
-    cors: {
-        origin: '*',
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const http_1 = __importDefault(require("http"));
+const socket_io_1 = __importDefault(require("socket.io"));
+const SessionManager_1 = require("./session/SessionManager");
+const port = 8000;
+class App {
+    constructor(port) {
+        this.port = port;
+        const app = (0, express_1.default)();
+        this.server = new http_1.default.Server(app);
+        this.io = new socket_io_1.default.Server(this.server, {
+            cors: {
+                origin: '*',
+            }
+        });
+        this.sessionManager = new SessionManager_1.SessionManager(this.io);
+        app.get('/', (req, res) => {
+            res.sendFile(__dirname + '/assets/index.html');
+        });
     }
-});
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/assets/index.html');
-});
-io.on('connection', (socket) => {
-    io.emit('connection');
-    console.log('a user connected');
-    socket.on('ping', (msg) => {
-        io.emit('pong', msg);
-    });
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
-});
-server.listen(port, () => {
-    console.log(`[server]: Server is listening at https://localhost:${port}`);
-});
+    Start() {
+        this.server.listen(this.port);
+        console.log(`Server listening on port ${this.port}.`);
+    }
+}
+new App(port).Start();

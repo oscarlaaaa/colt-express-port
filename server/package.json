@@ -2,7 +2,7 @@
   "name": "colt-express-port",
   "version": "1.0.0",
   "description": "A port of the board game Colt Express.",
-  "main": "server.ts",
+  "main": "src/server.ts",
   "scripts": {
     "start": "node dist/server.js",
     "build": "npx tsc",
