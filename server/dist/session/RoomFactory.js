@@ -10,7 +10,8 @@ class RoomFactory {
         return this.instance;
     }
     buildRoom() {
-        return new RoomManager_1.RoomManager();
+        return new RoomManager_1.RoomManager(RoomFactory.idNum++);
     }
 }
 exports.RoomFactory = RoomFactory;
+RoomFactory.idNum = 1;

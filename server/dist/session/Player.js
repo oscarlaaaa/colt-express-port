@@ -3,9 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
 class Player {
     constructor(socket) {
-        this.id = Player.idNum++;
+        this.id = socket.id;
         this.name = "Player " + this.id;
-        this.socket = socket;
+    }
+    setId(id) {
+        this.id = id;
     }
     getId() {
         return this.id;
@@ -13,9 +15,5 @@ class Player {
     getName() {
         return this.name;
     }
-    isConnected() {
-        return this.socket.connected;
-    }
 }
 exports.Player = Player;
-Player.idNum = 1;

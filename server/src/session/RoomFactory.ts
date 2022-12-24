@@ -1,6 +1,7 @@
 import { RoomManager } from "./RoomManager";
 
 export class RoomFactory {
+    static idNum = 1;
     static instance: RoomFactory | null;
 
     private constructor() {}
@@ -12,6 +13,6 @@ export class RoomFactory {
     }
 
     buildRoom() {
-        return new RoomManager();
+        return new RoomManager(RoomFactory.idNum++);
     }
 }

@@ -2,23 +2,26 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomManager = void 0;
 class RoomManager {
-    constructor() {
-        this.roomId = RoomManager.idNum++;
+    constructor(roomId) {
+        this.roomId = roomId;
         this.roomState = null;
-        this.players = {};
+        this.players = [];
         this.host = null;
     }
     hasPlayer(player) {
-        return player.getId() in this.players;
+        return this.players.includes(player.getId());
+    }
+    setHost(host) {
+        this.host = host;
     }
     addPlayer(player) {
-        if (!this.host) {
-            this.host = player;
-        }
-        this.players[player.getId()] = player.getName();
+        this.players.push(player.getId());
     }
     removePlayer(player) {
-        delete this.players[player.getId()];
+        const index = this.players.indexOf(player.getId());
+        if (index > -1) {
+            this.players.splice(index, 1);
+        }
     }
     getPlayers() {
         return this.players;
@@ -36,13 +39,6 @@ class RoomManager {
         return this.roomId;
     }
     clearDisconnected() {
-        let obj = this;
-        Object.keys(this.players).forEach(function (id) {
-            if (!obj.players[id].isConnected()) {
-                delete obj.players[id];
-            }
-        });
     }
 }
 exports.RoomManager = RoomManager;
-RoomManager.idNum = 1;

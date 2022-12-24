@@ -1,14 +1,14 @@
 export class Player {
-    static idNum: number = 1;
-
-    private id: number;
+    private id: string;
     private name: string;
-    private socket: any;
 
     constructor(socket: any) {
-        this.id = Player.idNum++;
+        this.id = socket.id;
         this.name = "Player " + this.id;
-        this.socket = socket;
+    }
+
+    setId(id: string) {
+        this.id = id;
     }
 
     getId() {
@@ -17,9 +17,5 @@ export class Player {
 
     getName() {
         return this.name;
-    }
-
-    isConnected() {
-        return this.socket.connected;
     }
 }

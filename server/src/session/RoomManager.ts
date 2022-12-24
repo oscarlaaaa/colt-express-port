@@ -1,33 +1,35 @@
 import { Player } from "./Player";
 
 export class RoomManager {
-    static idNum: number = 1;
-
     private roomId: number;
     private roomState: any;
-    private players: any;
+    private players: string[];
     private host: Player | null;
     
-    constructor() {
-        this.roomId = RoomManager.idNum++;
+    constructor(roomId: number) {
+        this.roomId = roomId;
         this.roomState = null;
-        this.players = {};
+        this.players = [];
         this.host = null;
     }
 
     hasPlayer(player: Player) {
-        return player.getId() in this.players;
+        return this.players.includes(player.getId());
+    }
+
+    setHost(host: Player) {
+        this.host = host;
     }
 
     addPlayer(player: Player) {
-        if (!this.host) {
-            this.host = player
-        } 
-        this.players[player.getId()] = player.getName();
+        this.players.push(player.getId());
     }
 
     removePlayer(player: Player) {
-        delete this.players[player.getId()]
+        const index = this.players.indexOf(player.getId());
+        if (index > -1) {
+            this.players.splice(index, 1);
+        }
     }
 
     getPlayers() {
@@ -48,11 +50,6 @@ export class RoomManager {
     }
 
     clearDisconnected() {
-        let obj = this;
-        Object.keys(this.players).forEach(function(id) {
-            if (!obj.players[id].isConnected()) {
-                delete obj.players[id];
-            }
-        });
+        
     }
 }
