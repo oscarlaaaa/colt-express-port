@@ -29,34 +29,33 @@ export class SessionManager {
         // todo
     }
 
-    createRoom(): void {
-        // todo
+    createRoom(display: Player): RoomManager {
+        let room = this.sessionFactory.buildRoom(display, this.io);
+        this.sessions.set(room.getId().toString(), room);
+        return room;
     }
 
     addToRoom(player: any) {
 
     }
 
-    deleteRoom(): void {
-        // todo
+    deleteRoom(room: RoomManager): boolean {
+        return this.sessions.delete(room.getId().toString());
     }
 
     findRoom(roomID: string): RoomManager | undefined {
         return this.sessions.get(roomID);
     }
 
-    // findPlayerRoom(player: Player): RoomManager | null {
-    // }
-
     // code from https://socket.io/get-started/private-messaging-part-2/ 
     private setupMiddleware() {
         this.io.use((socket: any, next: any) => {
             console.log(socket.handshake.auth);
-            const roomID = socket.handshake.auth.roomID;
-            const userID = socket.handshake.auth.userID;
+            const { roomID, userID, isHost } = socket.handshake.auth;
             if (roomID && userID) {
                 socket.roomID = roomID;
                 socket.userID = userID;
+                socket.isHost = isHost;
                 return next();
             }
             next();
@@ -65,54 +64,64 @@ export class SessionManager {
 
     private setupSocket() {
         this.io.on("connection", (socket: any) => {
-            
             console.log("a user connected");
-            let player = new Player(socket);
 
-            socket.on("join", (data: any) => {
+            // set up the channel the player communicates through
+            let player: any = null;
+            if (socket.userID && socket.roomID) {
+                let room = this.findRoom(socket.roomID);
+                if (room) {
+                    player = room.getPlayer(socket.userID);
+                }
+            }
+            if (player === null) 
+                player = new Player(socket);
+        
+            socket.join(player.getId());
+
+            socket.on("join", () => {
                 console.log("a user has tried to join");
-                console.log(data);
-                console.log(typeof data);
-                let room = this.findRoom(data.toString());
+                let room = this.findRoom(socket.roomID);
                 if (!room) {
-                    socket.emit("join", "Room does not exist");
+                    socket.emit("join", { status: 400, message: "Room does not exist" });
                 } else {
                     if (!socket.roomID && !socket.userID) {
                         room.addPlayer(player);
-                        socket.emit("session", {
-                            roomID: room.getId(),
-                            userID: player.getId(),
-                            isHost: false
-                        });
+                        this.setupSession(player, room, socket);
                     }
-                    socket.emit("join", room.getInfo());
+                    socket.emit("join", { status: 200, roomID: room.getId() });
                 }
             })
 
             socket.on("create", () => {
-                let room = this.sessionFactory.buildRoom();
-                room.setHost(player);
-
-                this.sessions.set(room.getId().toString(), room);
+                let room = this.createRoom(player);
                 socket.emit("create", room.getInfo());
-                socket.emit("session", {
-                    roomID: room.getId(),
-                    userID: player.getId(),
-                    isHost: true
-                });
+                this.setupSession(player, room, socket);
             })
 
             socket.on("disconnect", () => {
-                // let room = this.findPlayerRoom(player);
-                // if (room) {
-                //     room.removePlayer(player);
-                // }
                 console.log("user disconnected");
             });
 
             socket.onAny((event: any, data: any) => {
-                this.routeRequest(event, data);
+                if (socket.roomID) {
+                    let room = this.sessions.get(socket.roomID);
+                    room?.receiveMessage(event, data);
+                } 
             })
         });
+    }
+
+    setupSession(player: Player, room: RoomManager, socket: any) {
+        socket.emit("session", {
+            roomID: room.getId(),
+            userID: player.getId(),
+            isHost: player === room.getHost(),
+            isDisplay: player === room.getDisplay()
+        });
+        socket.roomID = room.getId();
+        socket.userID = player.getId();
+        socket.isHost = player === room.getHost();
+        socket.isDisplay = player === room.getDisplay();
     }
 }

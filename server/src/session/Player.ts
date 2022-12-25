@@ -1,10 +1,12 @@
 export class Player {
     private id: string;
     private name: string;
+    private socket: any;
 
     constructor(socket: any) {
         this.id = socket.id;
         this.name = "Player " + this.id;
+        this.socket = socket;
     }
 
     setId(id: string) {
@@ -17,5 +19,9 @@ export class Player {
 
     getName() {
         return this.name;
+    }
+
+    getSocket() {
+        return this.socket;
     }
 }

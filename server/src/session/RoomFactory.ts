@@ -1,7 +1,7 @@
 import { RoomManager } from "./RoomManager";
+import { Player } from "./Player";
 
 export class RoomFactory {
-    static idNum = 1;
     static instance: RoomFactory | null;
 
     private constructor() {}
@@ -12,7 +12,7 @@ export class RoomFactory {
         return this.instance;
     }
 
-    buildRoom() {
-        return new RoomManager(RoomFactory.idNum++);
+    buildRoom(display: Player, io: any) {
+        return new RoomManager(display, io);
     }
 }

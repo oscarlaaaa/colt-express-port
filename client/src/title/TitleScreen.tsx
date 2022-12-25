@@ -1,9 +1,12 @@
+import { Button } from "react-bootstrap";
 import React, { useState, useEffect, useContext } from 'react';
 import { SocketContext } from '../context/Socket';
 
-const Lobby = () => {
+const TitleScreen = () => {
     const socket = useContext(SocketContext);
     const [connected, setConnected] = useState<boolean>(socket.connected);
+    const [selected, setSelected] = useState<string | null>(null);
+
     const [data, setData] = useState<string>("");
     const [input, setInput] = useState("");
 
@@ -56,60 +59,25 @@ const Lobby = () => {
                 socket.off('create');
                 socket.off('connection');
                 socket.off('disconnect');
-                socket.off('pong');
             }
         };
     }, [connected]);
 
-
-    const connect = () => {
-        if (!socket.connected) {
-            socket.connect();
-        }
-    }
-
-    const joinRoom = () => {
-        if (socket.connected) {
-            socket.auth = { roomID: input }
-            socket.emit("join");
-        }
-    }
-
-    const createRoom = () => {
-        if (socket.connected) {
-            socket.emit("create");
-        }
-    }
-
-    const disconnect = () => {
-        if (socket.connected) {
-            socket.disconnect();
-        }
-    }
-
     return (
         <div>
-            <p>Connected: {'' + connected}</p>
-            { 
-                connected ?
+            {selected && <Button onClick={() => setSelected(null)}>Back</Button>}
+            <h1>Colt Express</h1>
+            {!selected && <div>
+                <Button onClick={() => setSelected("create")}>Create Game</Button>
+                <br />
+                <Button onClick={() => setSelected("join")}>Join Game</Button></div>}
+            {selected === "create" && 
                 <div>
-                    <p>Data: {data}</p>
-                    <br />
-                    <br />
-                    <br />
-                    <input value={input} onInput={e => setInput((e.target as HTMLInputElement).value)} />
-                    <button onClick={joinRoom}>Join Room</button>
-                    <button onClick={createRoom}>Create Room</button> 
-                </div>
-                : 
-                <div>
-                <p>sadge</p>
-                <button onClick={connect}>Connect</button>
-                </div>
-            }
-            <button onClick={disconnect}>Disconnect</button>
+                    
+                </div>}
+            {selected === "join" && <div>join</div>}
         </div>
     )
 }
 
-export default Lobby
+export default TitleScreen

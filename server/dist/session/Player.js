@@ -5,6 +5,7 @@ class Player {
     constructor(socket) {
         this.id = socket.id;
         this.name = "Player " + this.id;
+        this.socket = socket;
     }
     setId(id) {
         this.id = id;
@@ -14,6 +15,9 @@ class Player {
     }
     getName() {
         return this.name;
+    }
+    getSocket() {
+        return this.socket;
     }
 }
 exports.Player = Player;

@@ -9,9 +9,8 @@ class RoomFactory {
             this.instance = new RoomFactory();
         return this.instance;
     }
-    buildRoom() {
-        return new RoomManager_1.RoomManager(RoomFactory.idNum++);
+    buildRoom(display, io) {
+        return new RoomManager_1.RoomManager(display, io);
     }
 }
 exports.RoomFactory = RoomFactory;
-RoomFactory.idNum = 1;
