@@ -3,21 +3,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Player = void 0;
 class Player {
     constructor(socket) {
-        this.id = socket.id;
-        this.name = "Player " + this.id;
-        this.socket = socket;
+        this._id = socket.id;
+        this._name = "Player " + this.id;
     }
-    setId(id) {
-        this.id = id;
+    get id() {
+        return this._id;
     }
-    getId() {
-        return this.id;
+    set id(id) {
+        this._id = id;
     }
-    getName() {
-        return this.name;
+    get name() {
+        return this._name;
     }
-    getSocket() {
-        return this.socket;
+    set name(name) {
+        this._name = name;
     }
 }
 exports.Player = Player;

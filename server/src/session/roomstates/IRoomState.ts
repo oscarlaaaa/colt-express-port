@@ -5,7 +5,6 @@ export interface RoomState {
     nextState: RoomState;
 
     goNextState(): void;
-    processMessage(message: any): void;
     setupListeners(): void;
     cleanupState(): void;
 }

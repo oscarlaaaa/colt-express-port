@@ -1,12 +1,14 @@
 import { Player } from "./Player";
 import { RoomFactory } from "./RoomFactory";
 import { RoomManager } from "./RoomManager";
+import { Socket, Server } from "socket.io";
+import { PlayerSocket } from "./PlayerSocket";
 
 
 export class SessionManager {
     private sessions: Map<string, RoomManager>;
     private sessionFactory: RoomFactory;
-    private io: any;
+    private io: Server;
 
     constructor(io: any) {
         this.sessions = new Map();
@@ -31,16 +33,12 @@ export class SessionManager {
 
     createRoom(display: Player): RoomManager {
         let room = this.sessionFactory.buildRoom(display, this.io);
-        this.sessions.set(room.getId().toString(), room);
+        this.sessions.set(room.getRoomId().toString(), room);
         return room;
     }
 
-    addToRoom(player: any) {
-
-    }
-
-    deleteRoom(room: RoomManager): boolean {
-        return this.sessions.delete(room.getId().toString());
+    deleteRoom(roomID: string): boolean {
+        return this.sessions.delete(roomID);
     }
 
     findRoom(roomID: string): RoomManager | undefined {
@@ -63,7 +61,7 @@ export class SessionManager {
     }
 
     private setupSocket() {
-        this.io.on("connection", (socket: any) => {
+        this.io.on("connection", (socket: PlayerSocket) => {
             console.log("a user connected");
 
             // set up the channel the player communicates through
@@ -79,9 +77,11 @@ export class SessionManager {
         
             socket.join(player.getId());
 
-            socket.on("join", () => {
+
+            // set up room join and creation listeners
+            socket.on("join", (roomID: string) => {
                 console.log("a user has tried to join");
-                let room = this.findRoom(socket.roomID);
+                let room = socket.roomID ? this.findRoom(socket.roomID) : this.findRoom(roomID);
                 if (!room) {
                     socket.emit("join", { status: 400, message: "Room does not exist" });
                 } else {
@@ -89,7 +89,7 @@ export class SessionManager {
                         room.addPlayer(player);
                         this.setupSession(player, room, socket);
                     }
-                    socket.emit("join", { status: 200, roomID: room.getId() });
+                    socket.emit("join", { status: 200, roomID: room.getRoomId() });
                 }
             })
 
@@ -102,26 +102,23 @@ export class SessionManager {
             socket.on("disconnect", () => {
                 console.log("user disconnected");
             });
-
-            socket.onAny((event: any, data: any) => {
-                if (socket.roomID) {
-                    let room = this.sessions.get(socket.roomID);
-                    room?.receiveMessage(event, data);
-                } 
-            })
         });
     }
 
-    setupSession(player: Player, room: RoomManager, socket: any) {
+    setupSession(player: Player, room: RoomManager, socket: PlayerSocket) {
         socket.emit("session", {
-            roomID: room.getId(),
-            userID: player.getId(),
-            isHost: player === room.getHost(),
-            isDisplay: player === room.getDisplay()
+            roomID: room.getRoomId(),
+            userID: player.id,
+            isHost: player.id === room.getHostID(),
+            isDisplay: player.id === room.getDisplayID()
         });
-        socket.roomID = room.getId();
-        socket.userID = player.getId();
-        socket.isHost = player === room.getHost();
-        socket.isDisplay = player === room.getDisplay();
+        socket.roomID = room.getRoomId().toString();
+        socket.userID = player.id;
+        socket.isHost = player.id === room.getHostID();
+        socket.isDisplay = player.id === room.getDisplayID();
+
+        // turn off unnecessary listeners
+        socket.removeAllListeners("join");
+        socket.removeAllListeners("create");
     }
 }

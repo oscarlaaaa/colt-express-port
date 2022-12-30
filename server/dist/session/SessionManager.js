@@ -23,13 +23,11 @@ class SessionManager {
     }
     createRoom(display) {
         let room = this.sessionFactory.buildRoom(display, this.io);
-        this.sessions.set(room.getId().toString(), room);
+        this.sessions.set(room.getRoomId().toString(), room);
         return room;
     }
-    addToRoom(player) {
-    }
-    deleteRoom(room) {
-        return this.sessions.delete(room.getId().toString());
+    deleteRoom(roomID) {
+        return this.sessions.delete(roomID);
     }
     findRoom(roomID) {
         return this.sessions.get(roomID);
@@ -62,9 +60,10 @@ class SessionManager {
             if (player === null)
                 player = new Player_1.Player(socket);
             socket.join(player.getId());
-            socket.on("join", () => {
+            // set up room join and creation listeners
+            socket.on("join", (roomID) => {
                 console.log("a user has tried to join");
-                let room = this.findRoom(socket.roomID);
+                let room = socket.roomID ? this.findRoom(socket.roomID) : this.findRoom(roomID);
                 if (!room) {
                     socket.emit("join", { status: 400, message: "Room does not exist" });
                 }
@@ -73,7 +72,7 @@ class SessionManager {
                         room.addPlayer(player);
                         this.setupSession(player, room, socket);
                     }
-                    socket.emit("join", { status: 200, roomID: room.getId() });
+                    socket.emit("join", { status: 200, roomID: room.getRoomId() });
                 }
             });
             socket.on("create", () => {
@@ -84,25 +83,22 @@ class SessionManager {
             socket.on("disconnect", () => {
                 console.log("user disconnected");
             });
-            socket.onAny((event, data) => {
-                if (socket.roomID) {
-                    let room = this.sessions.get(socket.roomID);
-                    room === null || room === void 0 ? void 0 : room.receiveMessage(event, data);
-                }
-            });
         });
     }
     setupSession(player, room, socket) {
         socket.emit("session", {
-            roomID: room.getId(),
-            userID: player.getId(),
-            isHost: player === room.getHost(),
-            isDisplay: player === room.getDisplay()
+            roomID: room.getRoomId(),
+            userID: player.id,
+            isHost: player.id === room.getHostID(),
+            isDisplay: player.id === room.getDisplayID()
         });
-        socket.roomID = room.getId();
-        socket.userID = player.getId();
-        socket.isHost = player === room.getHost();
-        socket.isDisplay = player === room.getDisplay();
+        socket.roomID = room.getRoomId().toString();
+        socket.userID = player.id;
+        socket.isHost = player.id === room.getHostID();
+        socket.isDisplay = player.id === room.getDisplayID();
+        // turn off unnecessary listeners
+        socket.removeAllListeners("join");
+        socket.removeAllListeners("create");
     }
 }
 exports.SessionManager = SessionManager;

@@ -1,27 +1,25 @@
+import { Socket } from "socket.io";
+
 export class Player {
-    private id: string;
-    private name: string;
-    private socket: any;
+    private _id: string;
+    private _name: string;
 
-    constructor(socket: any) {
-        this.id = socket.id;
-        this.name = "Player " + this.id;
-        this.socket = socket;
+    constructor(socket: Socket) {
+        this._id = socket.id;
+        this._name = "Player " + this.id;
     }
 
-    setId(id: string) {
-        this.id = id;
+    public get id() {
+        return this._id;
+    }
+    public set id(id: string) {
+        this._id = id;
     }
 
-    getId() {
-        return this.id;
+    public get name() {
+        return this._name;
     }
-
-    getName() {
-        return this.name;
-    }
-
-    getSocket() {
-        return this.socket;
+    public set name(name: string) {
+        this._name = name;
     }
 }

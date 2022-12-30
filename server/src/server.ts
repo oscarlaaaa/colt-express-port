@@ -1,7 +1,6 @@
 import express from 'express'
 import http from 'http'
-import socketIO from 'socket.io'
-import { registerIndexHandlers } from './handlers/index'
+import { Server } from "socket.io";
 import { SessionManager } from "./session/SessionManager";
 
 const port: number = 8000
@@ -10,7 +9,7 @@ class App {
     private server: http.Server
     private port: number
 
-    private io: socketIO.Server
+    private io: Server
     private sessionManager: SessionManager;
 
     constructor(port: number) {
@@ -19,7 +18,7 @@ class App {
         const app = express();
 
         this.server = new http.Server(app)
-        this.io = new socketIO.Server(this.server, {
+        this.io = new Server(this.server, {
             cors: {
                 origin: '*',
             }

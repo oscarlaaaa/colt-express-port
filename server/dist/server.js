@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
-const socket_io_1 = __importDefault(require("socket.io"));
+const socket_io_1 = require("socket.io");
 const SessionManager_1 = require("./session/SessionManager");
 const port = 8000;
 class App {
@@ -13,7 +13,7 @@ class App {
         this.port = port;
         const app = (0, express_1.default)();
         this.server = new http_1.default.Server(app);
-        this.io = new socket_io_1.default.Server(this.server, {
+        this.io = new socket_io_1.Server(this.server, {
             cors: {
                 origin: '*',
             }
