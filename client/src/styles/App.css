@@ -1,0 +1,24 @@
+.App {
+    width: 100vw;
+    height: 100vh;
+    align-content: center;
+    display: flex;
+}
+.titleScreen {
+    width: 95%;
+    height: 95%;
+    margin: auto;
+    text-align: center;
+}
+.titleHeader {
+    font-size: 48pt;
+    text-align: center;
+    width: 100%;
+    margin-top: 50%;
+}
+.titleScreenButton {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5%;
+}

@@ -4,13 +4,18 @@ import { SocketContext } from '../context/Socket';
 
 const TitleScreen = () => {
     const socket = useContext(SocketContext);
+
     const [connected, setConnected] = useState<boolean>(socket.connected);
     const [selected, setSelected] = useState<string | null>(null);
-
     const [data, setData] = useState<string>("");
     const [input, setInput] = useState("");
 
+    function delay() {
+        return new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
     useEffect(() => {
+        console.log(connected);
         if (connected) {
             socket.on('join', (data: any) => {
                 setData(data);
@@ -23,7 +28,6 @@ const TitleScreen = () => {
             socket.on('disconnect', () => {
                 setData("");
                 setConnected(false);
-                console.log(socket.connected);
                 window.sessionStorage.clear();
             });
 
@@ -49,7 +53,10 @@ const TitleScreen = () => {
                 socket.emit("join");
             }
             socket.on('connect', () => {
-                setConnected(true);
+                delay().then(() => {
+                    console.log('Fake wait time for connection lets go');
+                    setConnected(true);
+                });
             });
         }
         return () => {
@@ -63,19 +70,39 @@ const TitleScreen = () => {
         };
     }, [connected]);
 
+    function createRoom() {
+        setSelected("create");
+        socket.connect();
+    }
+
+    function back() {
+        setSelected(null);
+        socket.disconnect();
+    }
+
     return (
-        <div>
-            {selected && <Button onClick={() => setSelected(null)}>Back</Button>}
-            <h1>Colt Express</h1>
-            {!selected && <div>
-                <Button onClick={() => setSelected("create")}>Create Game</Button>
-                <br />
-                <Button onClick={() => setSelected("join")}>Join Game</Button></div>}
-            {selected === "create" && 
-                <div>
-                    
+        <div className="titleScreen">
+            <h1 className="titleHeader">Colt Express</h1>
+            {!selected && 
+                <div style={{width: "100%"}}>
+                    <Button onClick={() => createRoom()} className="titleScreenButton">Create Game</Button>
+                    <br />
+                    <Button onClick={() => setSelected("join")} className="titleScreenButton">Join Game</Button>
                 </div>}
-            {selected === "join" && <div>join</div>}
+            {selected && 
+                <div>
+                    {connected ? <p>connected</p> : <p>connecting</p>}
+                    {selected && <Button onClick={() => back()}>Back</Button>}
+                    {selected === "create" && 
+                        <div>
+
+                        </div>}
+                    {selected === "join" && 
+                        <div>
+
+                        </div>}
+                </div>}
+            
         </div>
     )
 }
