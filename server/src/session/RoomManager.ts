@@ -1,7 +1,7 @@
 import { Player } from "./Player";
 import { RoomState } from "./roomstates/IRoomState";
-import { LobbyRoomState } from "./roomstates/LobbyRoomState";
-import { PlayingRoomState } from "./roomstates/PlayingRoomState";
+import { LobbyRoomState } from "./roomstates/lobby/LobbyRoomState";
+import { Socket, Server } from "socket.io"
 
 export class RoomManager {
     static idNum = 1;
@@ -10,9 +10,9 @@ export class RoomManager {
     private players: Map<String, Player>;
     private host: Player | null;
     private display: Player;
-    private io: any;
+    private io: Server;
     
-    constructor(display: Player, io: any) {
+    constructor(display: Player, io: Server) {
         this.roomId = RoomManager.idNum++;
         this.roomState = new LobbyRoomState(this);
         this.players = new Map();
@@ -21,6 +21,10 @@ export class RoomManager {
         this.io = io;
     }
 
+    getRoomId() {
+        return this.roomId;
+    }
+    
     setState(roomState: RoomState) {
         this.roomState = roomState;
     }
@@ -29,77 +33,74 @@ export class RoomManager {
         this.host = host;
     }
 
-    getDisplay(): Player {
-        return this.display;
+    getHostID(): string | undefined {
+        return this.host?.id;
     }
 
-    hasPlayer(player: Player): Player | undefined {
-        return this.players.get(player.getId());
+    getDisplayID(): string {
+        return this.display.id;
+    }
+
+    getPlayer(playerID: string): Player | undefined {
+        return this.players.get(playerID);
+    }
+    
+    getPlayers() {
+        return this.players;
     }
 
     addPlayer(player: Player) {
         if (this.host === null) {
             this.host = player;
         }
-        this.players.set(player.getId(), player);
+        this.players.set(player.id, player);
         console.log(this.players);
     }
 
     removePlayer(player: Player) {
-        this.players.delete(player.getId());
-    }
-
-    getHost(): Player | null {
-        return this.host;
-    }
-
-    getPlayer(playerID: string): Player | undefined {
-        return this.players.get(playerID);
-    }
-
-    getPlayers() {
-        return this.players;
-    }
+        this.players.delete(player.id);
+    }  
 
     getInfo() {
         return JSON.stringify({
             "id": this.roomId,
             "state": this.roomState,
             "players": JSON.stringify(Object.fromEntries(this.players)),
-            "host": this.host?.getId()
+            "host": this.host?.id
         })
     }
 
-    getId() {
-        return this.roomId;
+    async getPlayerSocket(playerID: string): Promise<any> {
+        const players = await this.io.in(playerID).fetchSockets();
+        if (players.length != 1)
+            return null;
+        return players[0];
     }
 
-    receiveMessage(event: string, message: any) {
-        if (message.playerID === "all") {
-            
-        } else {
-            const player = this.getPlayer(message.playerID);
-            if (!player) {
-                // player isn't in this room
-            } else {
-                // send message to the player
-            }
-        }
+    async getAllPlayerSockets(): Promise<any[]> {
+        let io: any = this.io;
+        Object.keys(this.players).forEach(async (userID) => {
+            io = io.in(userID);
+        });
+        return await io.fetchSockets();
     }
-    
-    sendMessage(event: string, message: any, player: Player | null) {
-        if (player === null) {
-            Object.keys(this.players).forEach((key) => {
-                let socket = this.players.get(key)?.getSocket();
-                socket.emit(event, message);
+
+    async sendMessage(event: string, message: any, playerID: string | null) {
+        if (playerID === null) {
+            Object.keys(this.players).forEach(async (userID) => {
+                const player = this.players.get(userID);
+                if (player) {
+                    let socket = await this.getPlayerSocket(userID);
+                    socket?.emit(event, message);
+                }
             });
         } else {
-            let socket = player.getSocket();
-            socket.emit(event, message);
+            let socket = await this.getPlayerSocket(playerID);
+            socket?.emit(event, message);
         }
     }
 
     clearDisconnected() {
-        
+        // stub
     }
 }
