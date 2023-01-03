@@ -4,13 +4,16 @@ import { LobbyRoomState } from "../lobby/LobbyRoomState";
 
 export class ResultsRoomState implements RoomState {
     room: RoomManager;
-    nextState: RoomState;
+    nextState: RoomState | null;
 
     constructor(room: RoomManager) {
         this.room = room;
-        this.nextState = new LobbyRoomState(this.room);
+        this.nextState = null;
     }
 
+    addPlayer (playerID: string): void {
+        throw new Error("Method not implemented.");
+    }
     goNextState(): void {
         throw new Error("Method not implemented.");
     }
@@ -20,5 +23,4 @@ export class ResultsRoomState implements RoomState {
     cleanupState(): void {
         throw new Error("Method not implemented.");
     }
-    
 }

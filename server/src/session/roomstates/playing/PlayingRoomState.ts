@@ -10,6 +10,10 @@ export class PlayingRoomState implements RoomState {
         this.room = room;
         this.nextState = new ResultsRoomState(this.room);
     }
+    
+    addPlayer (playerID: string): void {
+        throw new Error("Method not implemented.");
+    }
     goNextState(): void {
         throw new Error("Method not implemented.");
     }

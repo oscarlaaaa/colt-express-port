@@ -12,7 +12,7 @@ export class Ruleset {
     }
 
     public get turnLimit(): number {
-        return this._turnLimit
+        return this._turnLimit;
     }
     
     public set turnLimit(limit: number) {
@@ -22,7 +22,7 @@ export class Ruleset {
     }
 
     public get trainPhases(): number {
-        return this._trainPhases
+        return this._trainPhases;
     }
     
     public set trainPhases(phases: number) {
@@ -32,7 +32,7 @@ export class Ruleset {
     }
 
     public get phaseTurns(): number {
-        return this._phaseTurns
+        return this._phaseTurns;
     }
     
     public set phaseTurns(turns: number) {
@@ -42,13 +42,17 @@ export class Ruleset {
     }
 
     public get numTrainCars(): number {
-        return this._numTrainCars
+        return this._numTrainCars;
     }
     
     public set numTrainCars(cars: number) {
         if (cars < 1 || cars > 6)
             throw new Error("Number of train cars must be between 1 and 6.");
         this._numTrainCars = cars;
+    }
+
+    public get deckActionCounts(): Map<ActionType, number> {
+        return this._deckActionCounts;
     }
     
     public setDeckActionCount(actionType: ActionType, count: number) {
@@ -77,6 +81,16 @@ export class Ruleset {
         }
                 
         return ruleset;
+    }
+
+    public toString(): string {
+        return JSON.stringify({
+            turnLimit: this.turnLimit,
+            trainPhase: this.trainPhases,
+            phaseTurns: this.phaseTurns,
+            numTrainCars: this.numTrainCars,
+            deckActionCounts: JSON.stringify(Array.from(this.deckActionCounts.entries()))
+        })
     }
 }
 

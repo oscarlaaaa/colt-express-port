@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResultsRoomState = void 0;
-const LobbyRoomState_1 = require("../lobby/LobbyRoomState");
 class ResultsRoomState {
     constructor(room) {
         this.room = room;
-        this.nextState = new LobbyRoomState_1.LobbyRoomState(this.room);
+        this.nextState = null;
+    }
+    addPlayer(playerID) {
+        throw new Error("Method not implemented.");
     }
     goNextState() {
         throw new Error("Method not implemented.");

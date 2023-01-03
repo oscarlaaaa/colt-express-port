@@ -7,6 +7,9 @@ class PlayingRoomState {
         this.room = room;
         this.nextState = new ResultsRoomState_1.ResultsRoomState(this.room);
     }
+    addPlayer(playerID) {
+        throw new Error("Method not implemented.");
+    }
     goNextState() {
         throw new Error("Method not implemented.");
     }

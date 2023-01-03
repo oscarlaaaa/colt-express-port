@@ -42,6 +42,9 @@ class Ruleset {
             throw new Error("Number of train cars must be between 1 and 6.");
         this._numTrainCars = cars;
     }
+    get deckActionCounts() {
+        return this._deckActionCounts;
+    }
     setDeckActionCount(actionType, count) {
         if (count < 0)
             throw new Error("Number of an action in the deck cannot be a negative number.");
@@ -66,6 +69,15 @@ class Ruleset {
             throw new Error("Invalid json object.");
         }
         return ruleset;
+    }
+    toString() {
+        return JSON.stringify({
+            turnLimit: this.turnLimit,
+            trainPhase: this.trainPhases,
+            phaseTurns: this.phaseTurns,
+            numTrainCars: this.numTrainCars,
+            deckActionCounts: JSON.stringify(Array.from(this.deckActionCounts.entries()))
+        });
     }
 }
 exports.Ruleset = Ruleset;
