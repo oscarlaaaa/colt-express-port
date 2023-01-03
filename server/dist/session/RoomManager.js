@@ -30,14 +30,18 @@ class RoomManager {
         this.host = host;
     }
     getHostID() {
-        var _a;
-        return (_a = this.host) === null || _a === void 0 ? void 0 : _a.id;
+        if (this.host)
+            return this.host.id;
+        return null;
     }
     getDisplayID() {
         return this.display.id;
     }
     getPlayer(playerID) {
-        return this.players.get(playerID);
+        const player = this.players.get(playerID);
+        if (!player)
+            return null;
+        return player;
     }
     getPlayers() {
         return this.players;
@@ -47,6 +51,7 @@ class RoomManager {
             this.host = player;
         }
         this.players.set(player.id, player);
+        this.roomState.addPlayer(player.id);
         console.log(this.players);
     }
     removePlayer(player) {
@@ -55,11 +60,14 @@ class RoomManager {
     getInfo() {
         var _a;
         return JSON.stringify({
-            "id": this.roomId,
-            "state": this.roomState,
-            "players": JSON.stringify(Object.fromEntries(this.players)),
-            "host": (_a = this.host) === null || _a === void 0 ? void 0 : _a.id
+            id: this.roomId,
+            state: this.roomState.toString(),
+            players: Array.from(this.players.keys()),
+            host: (_a = this.host) === null || _a === void 0 ? void 0 : _a.id,
         });
+    }
+    getIO() {
+        return this.io;
     }
     getPlayerSocket(playerID) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -71,27 +79,36 @@ class RoomManager {
     }
     getAllPlayerSockets() {
         return __awaiter(this, void 0, void 0, function* () {
+            if (this.players.size == 0)
+                return [];
             let io = this.io;
             Object.keys(this.players).forEach((userID) => __awaiter(this, void 0, void 0, function* () {
                 io = io.in(userID);
             }));
-            return yield io.fetchSockets();
+            let sockets = yield io.fetchSockets();
+            return sockets;
         });
     }
     sendMessage(event, message, playerID) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.error("Outgoing message to " + playerID + ": " + message);
             if (playerID === null) {
                 Object.keys(this.players).forEach((userID) => __awaiter(this, void 0, void 0, function* () {
-                    const player = this.players.get(userID);
-                    if (player) {
-                        let socket = yield this.getPlayerSocket(userID);
-                        socket === null || socket === void 0 ? void 0 : socket.emit(event, message);
-                    }
+                    this.io.to(userID).emit(event, message);
                 }));
             }
             else {
-                let socket = yield this.getPlayerSocket(playerID);
-                socket === null || socket === void 0 ? void 0 : socket.emit(event, message);
+                this.io.to(playerID).emit(event, message);
+            }
+        });
+    }
+    cleanupRoom() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let sockets = yield this.getAllPlayerSockets();
+            if (sockets.length === 0)
+                return;
+            for (let socket of sockets) {
+                socket.disconnect();
             }
         });
     }

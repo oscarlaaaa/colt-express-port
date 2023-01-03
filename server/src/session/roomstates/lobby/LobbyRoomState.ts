@@ -14,7 +14,40 @@ export class LobbyRoomState implements RoomState {
         this.nextState = new PlayingRoomState(this.room);
         this.readyPlayers = new Map<String, boolean>();
         this.ruleset = new Ruleset();
-        this.setupListeners();
+    }
+
+    addPlayer(playerID: string): void {
+        this.readyPlayers.set(playerID, false);
+        this.room.getPlayerSocket(playerID).then(socket => {
+            socket.on("toggle_ready", () => {
+                let ready = this.readyPlayers.get(socket.userID);
+                if (ready === undefined) {
+                    console.error("That's super weird, how can you toggle ready if you're not in this room?")
+                } else {
+                    this.readyPlayers.set(socket.userID, !ready);
+                    const display = this.room.getDisplayID();
+                    this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), display);
+                    this.room.sendMessage("toggle_ready", !ready, socket.userID);
+
+                    // send current ruleset to the host if they're ready
+                    if (socket.userID === this.room.getHostID() && !ready)
+                        this.room.sendMessage("select_ruleset", this.ruleset.toString(), socket.userID);
+                }
+            })
+
+            if (socket.userID === this.room.getHostID()) {
+                socket.on("select_ruleset", (data: any) => {
+                    try {
+                        let ruleset = Ruleset.JSONToRuleset(data);
+                        this.ruleset = ruleset;
+                    } catch (e: any) {
+                        console.error("That's weird, failed to update ruleset.");
+                    }
+                })
+            }
+            this.room.sendMessage("toggle_ready", false, playerID);
+            this.room.sendMessage("create", this.room.getInfo(), this.room.getDisplayID());
+        })
     }
 
     goNextState(): void {
@@ -32,8 +65,7 @@ export class LobbyRoomState implements RoomState {
                         console.error("That's super weird, how can you toggle ready if you're not in this room?")
                     } else {
                         this.readyPlayers.set(socket.userID, !ready);
-                        const display = this.room.getDisplayID();
-                        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), display);
+                        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), this.room.getDisplayID());
                         this.room.sendMessage("toggle_ready", !ready, socket.userID);
 
                         // send current ruleset to the host if they're ready

@@ -9,7 +9,39 @@ class LobbyRoomState {
         this.nextState = new PlayingRoomState_1.PlayingRoomState(this.room);
         this.readyPlayers = new Map();
         this.ruleset = new Ruleset_1.Ruleset();
-        this.setupListeners();
+    }
+    addPlayer(playerID) {
+        this.readyPlayers.set(playerID, false);
+        this.room.getPlayerSocket(playerID).then(socket => {
+            socket.on("toggle_ready", () => {
+                let ready = this.readyPlayers.get(socket.userID);
+                if (ready === undefined) {
+                    console.error("That's super weird, how can you toggle ready if you're not in this room?");
+                }
+                else {
+                    this.readyPlayers.set(socket.userID, !ready);
+                    const display = this.room.getDisplayID();
+                    this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), display);
+                    this.room.sendMessage("toggle_ready", !ready, socket.userID);
+                    // send current ruleset to the host if they're ready
+                    if (socket.userID === this.room.getHostID() && !ready)
+                        this.room.sendMessage("select_ruleset", this.ruleset.toString(), socket.userID);
+                }
+            });
+            if (socket.userID === this.room.getHostID()) {
+                socket.on("select_ruleset", (data) => {
+                    try {
+                        let ruleset = Ruleset_1.Ruleset.JSONToRuleset(data);
+                        this.ruleset = ruleset;
+                    }
+                    catch (e) {
+                        console.error("That's weird, failed to update ruleset.");
+                    }
+                });
+            }
+            this.room.sendMessage("toggle_ready", false, playerID);
+            this.room.sendMessage("create", this.room.getInfo(), this.room.getDisplayID());
+        });
     }
     goNextState() {
         this.cleanupState();
@@ -26,8 +58,7 @@ class LobbyRoomState {
                     }
                     else {
                         this.readyPlayers.set(socket.userID, !ready);
-                        const display = this.room.getDisplayID();
-                        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), display);
+                        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), this.room.getDisplayID());
                         this.room.sendMessage("toggle_ready", !ready, socket.userID);
                         // send current ruleset to the host if they're ready
                         if (socket.userID === hostID && !ready)
