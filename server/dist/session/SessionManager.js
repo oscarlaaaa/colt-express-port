@@ -11,13 +11,6 @@ class SessionManager {
         this.setupMiddleware();
         this.setupSocket();
     }
-    routeRequest(event, data) {
-        switch (event) {
-            case "ping":
-                console.log("ping received");
-                this.io.emit("pong", data);
-        }
-    }
     clearEmptyRooms() {
         // todo
     }
@@ -32,15 +25,16 @@ class SessionManager {
     findRoom(roomID) {
         return this.sessions.get(roomID);
     }
-    // code from https://socket.io/get-started/private-messaging-part-2/ 
+    // code from https://socket.io/get-started/private-messaging-part-2/
     setupMiddleware() {
         this.io.use((socket, next) => {
             console.log(socket.handshake.auth);
-            const { roomID, userID, isHost } = socket.handshake.auth;
+            const { roomID, userID, isHost, isDisplay } = socket.handshake.auth;
             if (roomID && userID) {
                 socket.roomID = roomID;
                 socket.userID = userID;
                 socket.isHost = isHost;
+                socket.isDisplay = isDisplay;
                 return next();
             }
             next();
@@ -59,28 +53,38 @@ class SessionManager {
             }
             if (player === null)
                 player = new Player_1.Player(socket);
-            socket.join(player.getId());
+            socket.join(player.id);
             // set up room join and creation listeners
             socket.on("join", (roomID) => {
                 console.log("a user has tried to join");
-                let room = socket.roomID ? this.findRoom(socket.roomID) : this.findRoom(roomID);
+                let room = this.findRoom(roomID);
                 if (!room) {
                     socket.emit("join", { status: 400, message: "Room does not exist" });
                 }
                 else {
-                    if (!socket.roomID && !socket.userID) {
-                        room.addPlayer(player);
+                    if (player !== null) {
                         this.setupSession(player, room, socket);
+                        room.addPlayer(player);
+                        socket.emit("join", { status: 200, roomID: room.getRoomId() });
                     }
-                    socket.emit("join", { status: 200, roomID: room.getRoomId() });
                 }
             });
             socket.on("create", () => {
-                let room = this.createRoom(player);
-                socket.emit("create", room.getInfo());
-                this.setupSession(player, room, socket);
+                console.log("a user has tried to create a game");
+                if (player) {
+                    let room = this.createRoom(player);
+                    socket.emit("create", room.getInfo());
+                    this.setupSession(player, room, socket);
+                }
             });
             socket.on("disconnect", () => {
+                if (socket.roomID) {
+                    let room = this.findRoom(socket.roomID);
+                    if ((room === null || room === void 0 ? void 0 : room.getDisplayID()) === (player === null || player === void 0 ? void 0 : player.id)) {
+                        room === null || room === void 0 ? void 0 : room.cleanupRoom();
+                        this.deleteRoom(socket.roomID);
+                    }
+                }
                 console.log("user disconnected");
             });
         });
@@ -90,7 +94,7 @@ class SessionManager {
             roomID: room.getRoomId(),
             userID: player.id,
             isHost: player.id === room.getHostID(),
-            isDisplay: player.id === room.getDisplayID()
+            isDisplay: player.id === room.getDisplayID(),
         });
         socket.roomID = room.getRoomId().toString();
         socket.userID = player.id;
