@@ -7,3 +7,11 @@ export interface MainScreen {
 export interface Back {
     back: () => void;
 }
+
+export interface Ruleset {
+    turnLimit: number;
+    trainPhases: number;
+    phaseTurns: number;
+    numTrainCars: number;
+    deckActionCounts: any;
+}

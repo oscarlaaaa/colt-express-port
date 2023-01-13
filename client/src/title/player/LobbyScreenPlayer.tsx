@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Button } from "react-bootstrap";
 import { SocketContext } from '../../context/Socket';
+import { Ruleset } from '../../utils/Interfaces';
+import EditRuleset from './EditRuleset';
 
 const LobbyScreenPlayer = () => {
     const socket = useContext(SocketContext);
@@ -8,7 +10,8 @@ const LobbyScreenPlayer = () => {
     const [input, setInput] = useState("");
     const [roomData, setRoomData] = useState<any>(null);
     const [ready, setReady] = useState<boolean | null>(null);
-    const [ruleset, setRuleset] = useState<any>(null);
+    const [ruleset, setRuleset] = useState<Ruleset | null>(null);
+    const [editRuleset, setEditRuleset] = useState<boolean>(false);
 
     useEffect(() => {
         socket.on('join', (data: any) => {
@@ -16,7 +19,7 @@ const LobbyScreenPlayer = () => {
             if (data.status === 200) {
                 setRoomData(JSON.stringify(data));
             } else {
-                setRoomData(data);
+                setError("Error in joining a room. Please try again.");
             }
         });
 
@@ -25,7 +28,7 @@ const LobbyScreenPlayer = () => {
         })
 
         socket.on('select_ruleset', (data: any) => {
-            setRuleset(data);
+            setRuleset(JSON.parse(data));
         })
 
         return () => {
@@ -44,6 +47,10 @@ const LobbyScreenPlayer = () => {
         socket.emit("toggle_ready");
     }
 
+    function submitNewRuleset(rules: Ruleset) {
+        socket.emit("select_ruleset", rules);
+    }
+
     return (
         <div className="titleScreen">
             {roomData ? 
@@ -53,9 +60,16 @@ const LobbyScreenPlayer = () => {
                     <Button onClick={() => toggleReady()}>Ready up</Button>
                 }
                 {ready !== null && ready && 
-                    <Button onClick={() => toggleReady()}>Not ready</Button>
+                    <>
+                        <Button onClick={() => toggleReady()}>Not ready</Button>
+                        <br/>
+                        <br/>
+                        {editRuleset ? 
+                            <EditRuleset rules={ruleset} submitNewRuleset={submitNewRuleset} finishEditing={() => setEditRuleset(false)} /> 
+                            : 
+                            <Button onClick={() => setEditRuleset(true)}>Edit Rules</Button>}
+                    </>
                 }
-                {ruleset}
             </>
             :
             <>

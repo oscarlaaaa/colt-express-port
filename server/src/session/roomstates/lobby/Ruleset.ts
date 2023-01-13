@@ -63,6 +63,8 @@ export class Ruleset {
 
     // this function assumes that it's passed a valid JSON object
     static JSONToRuleset(json: any): Ruleset {
+        console.log(json);
+        console.log(typeof json);
         let ruleset = new Ruleset();
         try {
             ruleset.turnLimit = json.turnLimit;
@@ -70,23 +72,24 @@ export class Ruleset {
             ruleset.phaseTurns = json.phaseTurns;
             ruleset.numTrainCars = json.numTrainCars;
 
-            const deckActionCountsObject = JSON.parse(json.deckActionCounts);
-            Object.entries(deckActionCountsObject).forEach(x => {
-                console.log(x);
-            })
-            const deckActionCountsMap = new Map(Object.entries(deckActionCountsObject));
+            // const deckActionCountsObject = JSON.parse(json.deckActionCounts);
+            // Object.entries(deckActionCountsObject).forEach(x => {
+            //     console.log(x);
+            // })
+            // const deckActionCountsMap = new Map(Object.entries(deckActionCountsObject));
         } catch (e: any) {
             // todo
+            console.log(e);
             throw new Error("Invalid json object.")
         }
-                
+        console.log("Successfully updated ruleset!");       
         return ruleset;
     }
 
     public toString(): string {
         return JSON.stringify({
             turnLimit: this.turnLimit,
-            trainPhase: this.trainPhases,
+            trainPhases: this.trainPhases,
             phaseTurns: this.phaseTurns,
             numTrainCars: this.numTrainCars,
             deckActionCounts: JSON.stringify(Array.from(this.deckActionCounts.entries()))
