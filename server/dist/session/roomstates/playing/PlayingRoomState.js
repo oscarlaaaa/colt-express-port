@@ -19,5 +19,8 @@ class PlayingRoomState {
     cleanupState() {
         throw new Error("Method not implemented.");
     }
+    toString() {
+        return "Playing Room";
+    }
 }
 exports.PlayingRoomState = PlayingRoomState;

@@ -23,4 +23,7 @@ export class ResultsRoomState implements RoomState {
     cleanupState(): void {
         throw new Error("Method not implemented.");
     }
+    toString(): string {
+        return "Results Room";
+    }
 }

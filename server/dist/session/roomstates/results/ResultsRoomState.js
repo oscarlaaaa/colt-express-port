@@ -18,5 +18,8 @@ class ResultsRoomState {
     cleanupState() {
         throw new Error("Method not implemented.");
     }
+    toString() {
+        return "Results Room";
+    }
 }
 exports.ResultsRoomState = ResultsRoomState;

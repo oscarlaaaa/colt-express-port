@@ -23,5 +23,8 @@ export class PlayingRoomState implements RoomState {
     cleanupState(): void {
         throw new Error("Method not implemented.");
     }
-    
+
+    toString(): string {
+        return "Playing Room";
+    }
 }
