@@ -4,6 +4,7 @@ import { SocketContext } from "../../context/Socket";
 const LobbyScreenDisplay = () => {
     const socket = useContext(SocketContext);
     const [roomData, setRoomData] = useState<any>(null);
+    const [readyStates, setReadyStates] = useState<any>(null);
 
     useEffect(() => {
         console.log("rendered lobby screen display")
@@ -15,16 +16,23 @@ const LobbyScreenDisplay = () => {
             console.log(roomData);
         });
 
+        socket.on('toggle_ready', (data: any) => {
+            console.log(data);
+            setReadyStates(JSON.parse(data));
+            console.log(readyStates);
+        })
+
         if (roomData === null)
             socket.emit("create");
             
         return () => {
             socket.off('create');
+            socket.off('toggle_ready');
         };
-    }, [roomData]);
+    }, [roomData, readyStates]);
 
     const listItems = roomData?.players.map((person: any) =>
-        <li>{person}</li>
+        <li>{person}: {readyStates[person] ? "Ready" : "Not ready"}</li>
     );
 
     return <div className="titleScreen">
@@ -36,7 +44,7 @@ const LobbyScreenDisplay = () => {
         <h2>State: {roomData?.state}</h2>
         <br/>
         <h2>Players:</h2>
-        {roomData?.players && listItems}
+        {roomData?.players && readyStates && listItems}
     </div>;
 };
 

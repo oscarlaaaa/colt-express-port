@@ -8,4 +8,5 @@ export interface RoomState {
   setupListeners(): void;
   cleanupState(): void;
   addPlayer(playerID: string): void;
+  toString(): string;
 }

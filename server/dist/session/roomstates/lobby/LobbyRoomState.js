@@ -10,6 +10,11 @@ class LobbyRoomState {
         this.readyPlayers = new Map();
         this.ruleset = new Ruleset_1.Ruleset();
     }
+    togglePlayerReady(playerID) {
+        let ready = this.readyPlayers.get(playerID);
+        if (ready !== undefined)
+            this.readyPlayers.set(playerID, !ready);
+    }
     addPlayer(playerID) {
         this.readyPlayers.set(playerID, false);
         this.room.getPlayerSocket(playerID).then(socket => {
@@ -19,7 +24,7 @@ class LobbyRoomState {
                     console.error("That's super weird, how can you toggle ready if you're not in this room?");
                 }
                 else {
-                    this.readyPlayers.set(socket.userID, !ready);
+                    this.togglePlayerReady(socket.userID);
                     const display = this.room.getDisplayID();
                     this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), display);
                     this.room.sendMessage("toggle_ready", !ready, socket.userID);
@@ -35,6 +40,7 @@ class LobbyRoomState {
                         this.ruleset = ruleset;
                     }
                     catch (e) {
+                        console.error(e);
                         console.error("That's weird, failed to update ruleset.");
                     }
                 });
@@ -42,42 +48,13 @@ class LobbyRoomState {
             this.room.sendMessage("toggle_ready", false, playerID);
             this.room.sendMessage("create", this.room.getInfo(), this.room.getDisplayID());
         });
+        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), this.room.getDisplayID());
     }
     goNextState() {
         this.cleanupState();
         this.room.setState(this.nextState);
     }
     setupListeners() {
-        this.room.getAllPlayerSockets().then(sockets => {
-            let hostID = this.room.getHostID();
-            for (const socket of sockets) {
-                socket.on("toggle_ready", () => {
-                    let ready = this.readyPlayers.get(socket.userID);
-                    if (ready === undefined) {
-                        console.error("That's super weird, how can you toggle ready if you're not in this room?");
-                    }
-                    else {
-                        this.readyPlayers.set(socket.userID, !ready);
-                        this.room.sendMessage("toggle_ready", JSON.stringify(Object.fromEntries(this.readyPlayers)), this.room.getDisplayID());
-                        this.room.sendMessage("toggle_ready", !ready, socket.userID);
-                        // send current ruleset to the host if they're ready
-                        if (socket.userID === hostID && !ready)
-                            this.room.sendMessage("select_ruleset", JSON.stringify(this.ruleset), socket.userID);
-                    }
-                });
-                if (socket.userID === hostID) {
-                    socket.on("select_ruleset", (data) => {
-                        try {
-                            let ruleset = Ruleset_1.Ruleset.JSONToRuleset(data);
-                            this.ruleset = ruleset;
-                        }
-                        catch (e) {
-                            console.error("That's weird, failed to update ruleset.");
-                        }
-                    });
-                }
-            }
-        });
     }
     setupReadyMap() {
         const players = this.room.getPlayers();
@@ -102,6 +79,9 @@ class LobbyRoomState {
                 socket.off("toggleReady");
             }
         });
+    }
+    toString() {
+        return "Lobby Room";
     }
 }
 exports.LobbyRoomState = LobbyRoomState;
