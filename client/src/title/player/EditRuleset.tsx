@@ -10,7 +10,8 @@ const EditRuleset: React.FC<any> = (props: {rules: Ruleset, submitNewRuleset: Fu
     const [phaseTurns, setPhaseTurns] = useState<number>(props.rules['phaseTurns']);
     const [numTrainCars, setnumTrainCars] = useState<number>(props.rules['numTrainCars']);
 
-    function submit() {
+    function submit(e: any) {
+        e.preventDefault();
         const rules = {
             turnLimit: turnLimit,
             trainPhases: trainPhases,
@@ -25,25 +26,25 @@ const EditRuleset: React.FC<any> = (props: {rules: Ruleset, submitNewRuleset: Fu
         <Form>
             <Form.Group className="mb-3" controlId="formTurnLimit">
                 <Form.Label>Turn Limit</Form.Label>
-                <Form.Control type="number" value={turnLimit} onChange={(e) => setTurnLimit(parseInt(e.target.value))}  />
+                <Form.Control type="number" value={turnLimit} min={5} max={120} onChange={(e) => setTurnLimit(parseInt(e.target.value))}  />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formTurnLimit">
                 <Form.Label>Train Phase</Form.Label>
-                <Form.Control type="number" value={trainPhases} onChange={(e) => setTrainPhases(parseInt(e.target.value))} />
+                <Form.Control type="number" value={trainPhases} min={1} max={6} onChange={(e) => setTrainPhases(parseInt(e.target.value))} />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formTurnLimit">
                 <Form.Label>Phase Turns</Form.Label>
-                <Form.Control type="number" value={phaseTurns} onChange={(e) => setPhaseTurns(parseInt(e.target.value))} />
+                <Form.Control type="number" value={phaseTurns} min={1} max={6} onChange={(e) => setPhaseTurns(parseInt(e.target.value))} />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formTurnLimit">
                 <Form.Label>Number of Traincars</Form.Label>
-                <Form.Control type="number" value={numTrainCars} onChange={(e) => setnumTrainCars(parseInt(e.target.value))} />
+                <Form.Control type="number" value={numTrainCars} min={1} max={6} onChange={(e) => setnumTrainCars(parseInt(e.target.value))} />
             </Form.Group>
             <Form.Group className="mb-3" controlId="formTurnLimit">
                 <Form.Label>Deck Action Counts</Form.Label>
                 {/* <Form.Control type="number" placeholder="2" value={rules.turnLimit} /> */}
             </Form.Group>
-            <Button variant="primary" type="submit" onClick={submit}>
+            <Button variant="primary" type="submit" onClick={(e) => submit(e)}>
                 Submit
             </Button>
         </Form>
