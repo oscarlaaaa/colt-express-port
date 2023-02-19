@@ -1,5 +1,3 @@
-import { Player } from "./Player";
-
 export enum ActionType {
     Shoot = "SHOOT",
     MoveHorizontal = "MOVE_HORIZONTAL",

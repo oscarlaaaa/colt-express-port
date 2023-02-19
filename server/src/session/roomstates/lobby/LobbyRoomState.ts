@@ -36,7 +36,7 @@ export class LobbyRoomState implements RoomState {
                     this.room.sendMessage("toggle_ready", !ready, socket.userID);
 
                     // send current ruleset to the host if they're ready
-                    if (socket.userID === this.room.getHostID() && !ready)
+                    if (socket.userID === this.room.getHostID() && this.readyPlayers.get(socket.userID))
                         this.room.sendMessage("select_ruleset", this.ruleset.toString(), socket.userID);
                 }
             })
@@ -46,9 +46,11 @@ export class LobbyRoomState implements RoomState {
                     try {
                         let ruleset = Ruleset.JSONToRuleset(data);
                         this.ruleset = ruleset;
+                        this.room.sendMessage("select_ruleset", this.ruleset.toString(), socket.userID);
                     } catch (e: any) {
                         console.error(e);
                         console.error("That's weird, failed to update ruleset.");
+                        this.room.sendMessage("select_ruleset", JSON.stringify({"status": 400}), socket.userID);
                     }
                 })
             }

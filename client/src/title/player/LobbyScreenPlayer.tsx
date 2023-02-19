@@ -12,6 +12,7 @@ const LobbyScreenPlayer = () => {
     const [ready, setReady] = useState<boolean | null>(null);
     const [ruleset, setRuleset] = useState<Ruleset | null>(null);
     const [editRuleset, setEditRuleset] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         socket.on('join', (data: any) => {
@@ -25,10 +26,17 @@ const LobbyScreenPlayer = () => {
 
         socket.on('toggle_ready', (data: any) => {
             setReady(data);
+            setEditRuleset(false);
         })
 
         socket.on('select_ruleset', (data: any) => {
-            setRuleset(JSON.parse(data));
+            const resp = JSON.parse(data);
+            if (resp.status === 400) {
+                setErrorMessage("Failed to update ruleset. Please try again.");
+            } else {
+                setRuleset(resp);
+                setErrorMessage(null);
+            }
         })
 
         return () => {
@@ -64,17 +72,18 @@ const LobbyScreenPlayer = () => {
                         <Button onClick={() => toggleReady()}>Not ready</Button>
                         <br/>
                         <br/>
-                        {editRuleset ? 
+                        {errorMessage && <p style={{color: "red"}}>{errorMessage}</p>}
+                        {ruleset && (editRuleset ? 
                             <EditRuleset rules={ruleset} submitNewRuleset={submitNewRuleset} finishEditing={() => setEditRuleset(false)} /> 
                             : 
-                            <Button onClick={() => setEditRuleset(true)}>Edit Rules</Button>}
+                            <Button onClick={() => setEditRuleset(true)}>Edit Rules</Button>)}
                     </>
                 }
             </>
             :
             <>
                 <h2>Enter the Room ID</h2>
-                {error && <p>{error}</p>}
+                {error && <p style={{color: "red"}}>{error}</p>}
                 <input value={input} onInput={e => setInput((e.target as HTMLInputElement).value)} />
                 <Button onClick={findRoom}>Join Room</Button>
             </>}
